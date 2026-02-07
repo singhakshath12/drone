@@ -1,10 +1,14 @@
+import math
+
 def finger_states(lm):
     fingers = []
 
-    # thumb (x-axis)
-    fingers.append(1 if lm[4].x > lm[2].x else 0)
+    # thumb (distance-based)
+    thumb_tip = lm[4]
+    thumb_mcp = lm[2]
+    fingers.append(1 if abs(thumb_tip.x - thumb_mcp.x) > 0.04 else 0)
 
-    # other fingers (y-axis)
+    # index, middle, ring, pinky
     tips = [8, 12, 16, 20]
     pips = [6, 10, 14, 18]
 
@@ -13,45 +17,51 @@ def finger_states(lm):
 
     return fingers  # [thumb, index, middle, ring, pinky]
 
-def detect_direction(lm):
-    wrist = lm[0]
-    index = lm[8]
 
-    dx = index.x - wrist.x
-    dy = index.y - wrist.y
+def detect_direction(lm):
+    if lm is None:
+        return None
+
+    # index finger MCP → TIP
+    mcp = lm[5]
+    tip = lm[8]
+
+    dx = tip.x - mcp.x
+    dy = tip.y - mcp.y  # y increases downward
+
+    H_TH = 0.08
+    V_TH = 0.08
 
     if abs(dx) > abs(dy):
-        if dx > 0.15:
-            return "right"
-        elif dx < -0.15:
+        if dx > H_TH:
             return "left"
+        elif dx < -H_TH:
+            return "right"
     else:
-        if dy < -0.15:
-            return "up"
-        elif dy > 0.15:
+        if dy > V_TH:
             return "down"
+        elif dy < -V_TH:
+            return "up"
 
-    return "center"
-
-
-def custom_gesture(fingers, lm):
-    # fist
-    if fingers == [0, 0, 0, 0, 0]:
-        return "fist"
-
-    # thumbs up
-    if fingers == [1, 0, 0, 0, 0] and lm[4].y < lm[0].y:
-        return "thumbs up"
-
-    # thumbs down
-    if fingers == [1, 0, 0, 0, 0] and lm[4].y > lm[0].y:
-        return "thumbs down"
-
-    # call
-    if fingers == [1, 0, 0, 0, 1]:
-        return "call"
-    
-    # null / idle gesture
-    return "nothing"
+    return None
 
 
+def calculate_speed(lm):
+    if lm is None:
+        return 0.0
+
+    thumb = lm[4]
+    index = lm[8]
+
+    dist = math.sqrt(
+        (thumb.x - index.x) ** 2 +
+        (thumb.y - index.y) ** 2
+    )
+
+    MIN_D = 0.04
+    MAX_D = 0.25
+
+    dist = max(min(dist, MAX_D), MIN_D)
+    speed = (dist - MIN_D) / (MAX_D - MIN_D)
+
+    return round(speed, 1)

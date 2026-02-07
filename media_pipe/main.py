@@ -1,34 +1,43 @@
 import cv2
-from media.hand_tracking import get_frame_and_landmarks
-from media.gestures import finger_states, detect_direction, custom_gesture
+from hand_tracking import get_frame_and_landmarks
+from gestures import finger_states, detect_direction, calculate_speed
 
 while True:
-    frame, lm = get_frame_and_landmarks()
-
+    frame, left_lm, right_lm = get_frame_and_landmarks()
     if frame is None:
         continue
 
-    gesture_text = "nothing"
+    display_text = "nothing"
+    speed_text = "0.0"
 
-    if lm:
-        fingers = finger_states(lm)
-        custom = custom_gesture(fingers, lm)
+    # RIGHT HAND → SPEED
+    if right_lm:
+        speed = calculate_speed(right_lm)
+        speed_text = str(speed)
 
-        if custom:
-            gesture_text = custom
-
+    # LEFT HAND → DIRECTION / FIST / PALM
+    if left_lm:
+        # 1️⃣ DIRECTION (highest priority)
+        direction = detect_direction(left_lm)
+        if direction:
+            display_text = direction
         else:
-            direction = detect_direction(lm)
+            fingers = finger_states(left_lm)
 
-            if direction in ["UP", "DOWN", "LEFT", "RIGHT"]:
-                 gesture_text = direction
+            # 2️⃣ FIST
+            if fingers == [0, 0, 0, 0, 0]:
+                display_text = "fist"
+
+            # 3️⃣ OPEN PALM
+            elif fingers == [1, 1, 1, 1, 1]:
+                display_text = "palm open"
+
             else:
-                gesture_text = "nothing"
-
+                display_text = "nothing"
 
     cv2.putText(
         frame,
-        gesture_text,
+        display_text,
         (20, 50),
         cv2.FONT_HERSHEY_SIMPLEX,
         1.2,
@@ -36,7 +45,17 @@ while True:
         3
     )
 
-    cv2.imshow("Hand Gesture Control", frame)
+    cv2.putText(
+        frame,
+        speed_text,
+        (20, 100),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1.2,
+        (0, 0, 0),
+        3
+    )
+
+    cv2.imshow("MEDIAPIPE", frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
