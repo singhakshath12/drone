@@ -10,25 +10,24 @@ while True:
     display_text = "nothing"
     speed_text = "0.0"
 
-    # RIGHT HAND → SPEED
+    # RIGHT HAND - SPEED
     if right_lm:
         speed = calculate_speed(right_lm)
         speed_text = str(speed)
 
-    # LEFT HAND → DIRECTION / FIST / PALM
+    # LEFT HAND - HESTURE
     if left_lm:
-        # 1️⃣ DIRECTION (highest priority)
         direction = detect_direction(left_lm)
         if direction:
             display_text = direction
         else:
             fingers = finger_states(left_lm)
 
-            # 2️⃣ FIST
+            # FIST
             if fingers == [0, 0, 0, 0, 0]:
                 display_text = "fist"
 
-            # 3️⃣ OPEN PALM
+            # OPEN PALM
             elif fingers == [1, 1, 1, 1, 1]:
                 display_text = "palm open"
 

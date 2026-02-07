@@ -1,9 +1,11 @@
+import cv2
+import mediapipe as mp
 import math
 
 def finger_states(lm):
     fingers = []
 
-    # thumb (distance-based)
+    # thumb 
     thumb_tip = lm[4]
     thumb_mcp = lm[2]
     fingers.append(1 if abs(thumb_tip.x - thumb_mcp.x) > 0.04 else 0)
@@ -22,12 +24,12 @@ def detect_direction(lm):
     if lm is None:
         return None
 
-    # index finger MCP → TIP
+    # index finger 
     mcp = lm[5]
     tip = lm[8]
 
     dx = tip.x - mcp.x
-    dy = tip.y - mcp.y  # y increases downward
+    dy = tip.y - mcp.y  
 
     H_TH = 0.08
     V_TH = 0.08
