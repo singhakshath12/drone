@@ -5,10 +5,12 @@ IMG_SIZE = 64
 BATCH_SIZE = 8
 
 datagen = ImageDataGenerator(
-        rescale=1./255,
-        rotation_range=5,
-        validation_split=0.2
-    )
+    rescale=1./255,
+    brightness_range=(0.7, 1.3),
+    rotation_range=3,
+    validation_split=0.2
+)
+
 
 train_data = datagen.flow_from_directory(
     "dataset",
